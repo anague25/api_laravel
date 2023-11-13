@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use Exception;
 use App\Models\Post;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreatePostRequest;
 use App\Http\Requests\UpdatePostRequest;
@@ -12,8 +13,34 @@ use App\Http\Requests\UpdatePostRequest;
 class PostController extends Controller
 {
 
-    public function index(){
-        return view('index');
+    public function index(Request $request){
+
+        try{
+
+        $query = Post::query();
+        $perpage = 2;
+        $page = $request->input("page",1);
+        $search = $request->input("search");
+        if($search){
+            $query->whereRaw("title LIKE '%".$search."%'");
+        }
+
+        $total = $query->count();
+        $result = $query->offset(($page -1) * $perpage)->limit($perpage)->get();
+
+        return response()->json([
+            "status_code" => "200",
+            "status_message" => "le donnees ont ete recupere",
+            "current_page" => $page,
+            "last_page" => ceil($total/$perpage),
+            "items"=>$result
+        ]);
+
+        }
+
+        catch(Exception $e){
+            return response()->json($e);
+        }
     }
 
 
